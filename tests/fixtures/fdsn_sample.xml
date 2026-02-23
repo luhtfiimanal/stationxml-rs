@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.2">
+  <Source>Pena Bumi</Source>
+  <Sender>stationxml-rs</Sender>
+  <Created>2025-01-15T00:00:00Z</Created>
+  <Network code="XX" startDate="2024-01-01T00:00:00Z">
+    <Description>Local Test Network</Description>
+    <Station code="PBUMI" startDate="2024-06-01T00:00:00Z">
+      <Latitude>-7.7714</Latitude>
+      <Longitude>110.3776</Longitude>
+      <Elevation>150</Elevation>
+      <Site>
+        <Name>Yogyakarta Seismic Shelter</Name>
+        <Country>Indonesia</Country>
+      </Site>
+      <CreationDate>2024-06-01T00:00:00Z</CreationDate>
+      <Channel code="SHZ" locationCode="00" startDate="2024-06-01T00:00:00Z">
+        <Latitude>-7.7714</Latitude>
+        <Longitude>110.3776</Longitude>
+        <Elevation>150</Elevation>
+        <Depth>0</Depth>
+        <Azimuth>0</Azimuth>
+        <Dip>-90</Dip>
+        <SampleRate>100</SampleRate>
+        <Sensor>
+          <Type>Geophone</Type>
+          <Manufacturer>Geospace</Manufacturer>
+          <Model>GS-11D</Model>
+          <SerialNumber>1234</SerialNumber>
+        </Sensor>
+        <DataLogger>
+          <Type>Datalogger</Type>
+          <Manufacturer>Pena Bumi</Manufacturer>
+          <Model>PB-24</Model>
+          <SerialNumber>PB001</SerialNumber>
+        </DataLogger>
+        <Response>
+          <InstrumentSensitivity>
+            <Value>53687084.8</Value>
+            <Frequency>15</Frequency>
+            <InputUnits>
+              <Name>M/S</Name>
+              <Description>Velocity in meters per second</Description>
+            </InputUnits>
+            <OutputUnits>
+              <Name>COUNTS</Name>
+              <Description>Digital counts</Description>
+            </OutputUnits>
+          </InstrumentSensitivity>
+          <Stage number="1">
+            <PolesZeros>
+              <InputUnits>
+                <Name>M/S</Name>
+                <Description>Velocity in meters per second</Description>
+              </InputUnits>
+              <OutputUnits>
+                <Name>V</Name>
+                <Description>Volts</Description>
+              </OutputUnits>
+              <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
+              <NormalizationFactor>1.0</NormalizationFactor>
+              <NormalizationFrequency>15</NormalizationFrequency>
+              <Zero number="0">
+                <Real>0</Real>
+                <Imaginary>0</Imaginary>
+              </Zero>
+              <Zero number="1">
+                <Real>0</Real>
+                <Imaginary>0</Imaginary>
+              </Zero>
+              <Pole number="0">
+                <Real>-22.2111</Real>
+                <Imaginary>22.2111</Imaginary>
+              </Pole>
+              <Pole number="1">
+                <Real>-22.2111</Real>
+                <Imaginary>-22.2111</Imaginary>
+              </Pole>
+            </PolesZeros>
+            <StageGain>
+              <Value>32</Value>
+              <Frequency>15</Frequency>
+            </StageGain>
+          </Stage>
+          <Stage number="2">
+            <Coefficients>
+              <InputUnits>
+                <Name>V</Name>
+                <Description>Volts</Description>
+              </InputUnits>
+              <OutputUnits>
+                <Name>COUNTS</Name>
+                <Description>Digital counts</Description>
+              </OutputUnits>
+              <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+              <Numerator>1</Numerator>
+            </Coefficients>
+            <Decimation>
+              <InputSampleRate>100</InputSampleRate>
+              <Factor>1</Factor>
+              <Offset>0</Offset>
+              <Delay>0</Delay>
+              <Correction>0</Correction>
+            </Decimation>
+            <StageGain>
+              <Value>1677721.4</Value>
+              <Frequency>15</Frequency>
+            </StageGain>
+          </Stage>
+        </Response>
+      </Channel>
+      <Channel code="SHN" locationCode="00" startDate="2024-06-01T00:00:00Z">
+        <Latitude>-7.7714</Latitude>
+        <Longitude>110.3776</Longitude>
+        <Elevation>150</Elevation>
+        <Depth>0</Depth>
+        <Azimuth>0</Azimuth>
+        <Dip>0</Dip>
+        <SampleRate>100</SampleRate>
+        <Sensor>
+          <Type>Geophone</Type>
+          <Manufacturer>Geospace</Manufacturer>
+          <Model>GS-11D</Model>
+          <SerialNumber>1235</SerialNumber>
+        </Sensor>
+      </Channel>
+      <Channel code="SHE" locationCode="00" startDate="2024-06-01T00:00:00Z">
+        <Latitude>-7.7714</Latitude>
+        <Longitude>110.3776</Longitude>
+        <Elevation>150</Elevation>
+        <Depth>0</Depth>
+        <Azimuth>90</Azimuth>
+        <Dip>0</Dip>
+        <SampleRate>100</SampleRate>
+        <Sensor>
+          <Type>Geophone</Type>
+          <Manufacturer>Geospace</Manufacturer>
+          <Model>GS-11D</Model>
+          <SerialNumber>1236</SerialNumber>
+        </Sensor>
+      </Channel>
+    </Station>
+  </Network>
+</FDSNStationXML>
