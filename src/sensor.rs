@@ -3,7 +3,7 @@
 //! Provides a database of common seismometer and accelerometer
 //! specifications, loaded from an embedded JSON file.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 
 const SENSORS_JSON: &str = include_str!("../data/sensors.json");
@@ -11,7 +11,7 @@ const SENSORS_JSON: &str = include_str!("../data/sensors.json");
 static SENSOR_DB: OnceLock<Vec<SensorEntry>> = OnceLock::new();
 
 /// A sensor specification from the built-in database.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SensorEntry {
     /// Model name (e.g. "GS-11D", "STS-2")
     pub model: String,
