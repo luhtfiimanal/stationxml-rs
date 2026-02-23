@@ -15,11 +15,12 @@
 //! ```
 
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 // ─── Top-level ───────────────────────────────────────────────────────
 
 /// Top-level inventory — container for all station metadata.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Inventory {
     /// Organization that generated this metadata (e.g. "IRIS", "Pena Bumi")
     pub source: String,
@@ -36,7 +37,7 @@ pub struct Inventory {
 /// A seismic network — a collection of stations operated together.
 ///
 /// Network codes are typically 2 characters (e.g. "GE", "IU", "XX").
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Network {
     /// FDSN network code (e.g. "GE", "IU", "XX")
     pub code: String,
@@ -51,7 +52,7 @@ pub struct Network {
 }
 
 /// A seismic station — one physical location with one or more sensors.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Station {
     /// Station code (e.g. "PBUMI", "ANMO")
     pub code: String,
@@ -76,7 +77,7 @@ pub struct Station {
 }
 
 /// Site information for a station — describes the physical location.
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Site {
     /// Site name (e.g. "Yogyakarta Seismic Shelter")
     pub name: String,
@@ -102,7 +103,7 @@ pub struct Site {
 /// - Orientation code (direction): Z (vertical), N (north), E (east), etc.
 ///
 /// See `docs/guide/02-channel-codes.md` for the full breakdown.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Channel {
     /// SEED channel code (e.g. "SHZ", "BHN", "HNE")
     pub code: String,
@@ -135,7 +136,7 @@ pub struct Channel {
 }
 
 /// Equipment description — sensor, datalogger, or other instrument.
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Equipment {
     /// Equipment type (e.g. "Geophone", "Datalogger")
     pub equipment_type: Option<String>,
@@ -161,7 +162,7 @@ pub struct Equipment {
 ///
 /// Contains both a quick overall sensitivity and detailed per-stage information.
 /// See `docs/guide/03-instrument-response.md` for background.
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Response {
     /// Overall sensitivity (product of all stage gains).
     /// Used for quick counts-to-physical conversion at a single frequency.
@@ -175,7 +176,7 @@ pub struct Response {
 ///
 /// `value` is in units of `output_units / input_units` (e.g. counts per m/s).
 /// Only valid at the specified `frequency`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct InstrumentSensitivity {
     /// Sensitivity value (e.g. 53721548.8 counts/(m/s))
     pub value: f64,
@@ -188,7 +189,7 @@ pub struct InstrumentSensitivity {
 }
 
 /// Physical or digital units.
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct Units {
     /// Unit name following SEED convention (e.g. "M/S", "V", "COUNTS")
     pub name: String,
@@ -202,7 +203,7 @@ pub struct Units {
 ///
 /// Each stage has a gain and optionally one transfer function type
 /// (poles & zeros, coefficients, or FIR).
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ResponseStage {
     /// Stage number (1-based). Stage 1 is typically the sensor.
     pub number: u32,
@@ -219,7 +220,7 @@ pub struct ResponseStage {
 }
 
 /// Gain of a single stage at a reference frequency.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StageGain {
     /// Gain value (e.g. 32.0 V/(m/s) for a sensor, 1678801.5 counts/V for an ADC)
     pub value: f64,
@@ -236,7 +237,7 @@ pub struct StageGain {
 /// H(s) = A0 * product(s - z_i) / product(s - p_j)
 /// ```
 /// where s = j*2*pi*f for Laplace (radians) or s = j*f for Laplace (Hz).
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PolesZeros {
     /// Input units for this stage (e.g. M/S for velocity)
     pub input_units: Units,
@@ -255,7 +256,7 @@ pub struct PolesZeros {
 }
 
 /// A single complex pole or zero.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PoleZero {
     /// Stage-local index number
     pub number: u32,
@@ -266,7 +267,7 @@ pub struct PoleZero {
 }
 
 /// Transfer function type for poles & zeros.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum PzTransferFunction {
     /// Laplace transform, angular frequency (radians/second)
     LaplaceRadians,
@@ -277,7 +278,7 @@ pub enum PzTransferFunction {
 }
 
 /// Coefficient-based transfer function.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Coefficients {
     /// Input units for this stage
     pub input_units: Units,
@@ -292,7 +293,7 @@ pub struct Coefficients {
 }
 
 /// Transfer function type for coefficients.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CfTransferFunction {
     /// Analog, angular frequency (radians/second)
     AnalogRadians,
@@ -303,7 +304,7 @@ pub enum CfTransferFunction {
 }
 
 /// FIR (Finite Impulse Response) filter.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FIR {
     /// Input units for this stage
     pub input_units: Units,
@@ -316,7 +317,7 @@ pub struct FIR {
 }
 
 /// FIR filter symmetry type.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Symmetry {
     /// No symmetry — all coefficients specified
     None,
@@ -327,7 +328,7 @@ pub enum Symmetry {
 }
 
 /// Decimation parameters — describes how sample rate is reduced at this stage.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Decimation {
     /// Input sample rate to this stage (Hz)
     pub input_sample_rate: f64,

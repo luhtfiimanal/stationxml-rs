@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2025-02-23
+
+### Added
+- `Serialize` derive on `SensorEntry` for JSON API usage (#1)
+- `Serialize, Deserialize` derives on all core inventory types: `Inventory`, `Network`, `Station`, `Channel`, `Response`, `Equipment`, `Site`, `Units`, and all response stage types (#2)
+
 ## [0.2.0] - 2025-02-23
 
 ### Added
