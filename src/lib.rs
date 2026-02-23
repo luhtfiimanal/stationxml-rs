@@ -8,14 +8,16 @@
 //! | Format | Read | Write | Status |
 //! |--------|------|-------|--------|
 //! | FDSN StationXML 1.2 | Yes | Yes | v0.1 |
-//! | SeisComP SC3ML 0.13 | -- | -- | v0.2 (planned) |
+//! | SeisComP SC3ML 0.6–0.13 | Yes | Yes | v0.2 |
 
 pub mod builder;
 pub mod conversion;
+pub(crate) mod datetime;
 pub mod error;
 pub mod fdsn;
 pub mod format;
 pub mod inventory;
+pub mod sc3ml;
 pub mod sensor;
 
 pub use builder::InventoryBuilder;
@@ -24,6 +26,7 @@ pub use error::{Result, StationXmlError};
 pub use fdsn::Fdsn;
 pub use format::{Format, StationXmlFormat, detect_format};
 pub use inventory::*;
+pub use sc3ml::Sc3ml;
 pub use sensor::{SensorEntry, find_sensor, load_sensor_library};
 
 use std::path::Path;
@@ -38,9 +41,7 @@ pub fn read_from_file(path: impl AsRef<Path>) -> Result<Inventory> {
 pub fn read_from_str(xml: &str) -> Result<Inventory> {
     match detect_format(xml) {
         Some(Format::Fdsn) => Fdsn::read_from_str(xml),
-        Some(Format::Sc3ml) => Err(StationXmlError::InvalidData(
-            "SC3ML format not yet supported in v0.1".into(),
-        )),
+        Some(Format::Sc3ml) => Sc3ml::read_from_str(xml),
         None => Err(StationXmlError::UnknownFormat),
     }
 }

@@ -1,7 +1,6 @@
 //! FDSN StationXML reader: XML → fdsn types → Inventory.
 
-use chrono::{DateTime, NaiveDateTime, Utc};
-
+use crate::datetime::parse_datetime_opt;
 use crate::error::{Result, StationXmlError};
 use crate::inventory::*;
 
@@ -240,81 +239,9 @@ fn parse_symmetry(s: &str) -> Result<Symmetry> {
     }
 }
 
-// ─── DateTime parsing ───────────────────────────────────────────────
-
-/// Parse ISO 8601 datetime string to chrono DateTime<Utc>.
-///
-/// Handles multiple variants commonly found in FDSN StationXML:
-/// - `2026-02-20T00:00:00Z` (RFC3339 with Z)
-/// - `2026-02-20T00:00:00.000Z` (with fractional seconds)
-/// - `2026-02-20T00:00:00+00:00` (with offset)
-/// - `2026-02-20T00:00:00` (no timezone — assume UTC)
-/// - `2026-02-20T00:00:00.000` (fractional, no timezone)
-fn parse_datetime(s: &str) -> Result<DateTime<Utc>> {
-    // Try RFC3339 first (with timezone info)
-    if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
-        return Ok(dt.with_timezone(&Utc));
-    }
-    // Try without timezone (assume UTC)
-    if let Ok(naive) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S") {
-        return Ok(naive.and_utc());
-    }
-    // Try with fractional seconds, no timezone
-    if let Ok(naive) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.f") {
-        return Ok(naive.and_utc());
-    }
-    Err(StationXmlError::InvalidData(format!(
-        "cannot parse datetime: '{s}'"
-    )))
-}
-
-fn parse_datetime_opt(s: &Option<String>) -> Result<Option<DateTime<Utc>>> {
-    match s {
-        Some(s) if !s.is_empty() => Ok(Some(parse_datetime(s)?)),
-        _ => Ok(None),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::{Datelike, Timelike};
-
-    #[test]
-    fn parse_datetime_rfc3339_z() {
-        let dt = parse_datetime("2026-02-20T00:00:00Z").unwrap();
-        assert_eq!(dt.year(), 2026);
-        assert_eq!(dt.month(), 2);
-    }
-
-    #[test]
-    fn parse_datetime_rfc3339_offset() {
-        let dt = parse_datetime("2026-02-20T00:00:00+00:00").unwrap();
-        assert_eq!(dt.year(), 2026);
-    }
-
-    #[test]
-    fn parse_datetime_no_timezone() {
-        let dt = parse_datetime("2026-02-20T00:00:00").unwrap();
-        assert_eq!(dt.year(), 2026);
-    }
-
-    #[test]
-    fn parse_datetime_fractional() {
-        let dt = parse_datetime("2026-02-20T12:30:45.123Z").unwrap();
-        assert_eq!(dt.hour(), 12);
-    }
-
-    #[test]
-    fn parse_datetime_fractional_no_tz() {
-        let dt = parse_datetime("2026-02-20T12:30:45.123").unwrap();
-        assert_eq!(dt.hour(), 12);
-    }
-
-    #[test]
-    fn parse_datetime_invalid() {
-        assert!(parse_datetime("not-a-date").is_err());
-    }
 
     #[test]
     fn read_sample_xml() {

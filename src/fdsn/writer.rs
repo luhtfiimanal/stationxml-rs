@@ -1,7 +1,8 @@
 //! FDSN StationXML writer: Inventory → fdsn types → XML.
 
-use chrono::{DateTime, SecondsFormat, Utc};
+use chrono::{SecondsFormat, Utc};
 
+use crate::datetime::{format_datetime, format_datetime_opt};
 use crate::error::Result;
 use crate::inventory::*;
 
@@ -236,14 +237,4 @@ fn format_symmetry(sym: &Symmetry) -> String {
         Symmetry::Even => "EVEN".into(),
         Symmetry::Odd => "ODD".into(),
     }
-}
-
-// ─── DateTime formatting ────────────────────────────────────────────
-
-fn format_datetime(dt: &DateTime<Utc>) -> String {
-    dt.to_rfc3339_opts(SecondsFormat::Secs, true)
-}
-
-fn format_datetime_opt(dt: &Option<DateTime<Utc>>) -> Option<String> {
-    dt.as_ref().map(format_datetime)
 }

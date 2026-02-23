@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp xmlns="http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.13" version="0.13">
+  <Inventory>
+    <sensor publicID="Sensor#GS11D_Z" name="PBUMI.SHZ" response="ResponsePAZ#GS11D">
+      <description>GS-11D Geophone</description>
+      <model>GS-11D</model>
+      <manufacturer>Geospace</manufacturer>
+      <type>Geophone</type>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#GS11D_N" name="PBUMI.SHN" response="ResponsePAZ#GS11D">
+      <description>GS-11D Geophone</description>
+      <model>GS-11D</model>
+      <manufacturer>Geospace</manufacturer>
+      <type>Geophone</type>
+      <unit>M/S</unit>
+    </sensor>
+    <sensor publicID="Sensor#GS11D_E" name="PBUMI.SHE" response="ResponsePAZ#GS11D">
+      <description>GS-11D Geophone</description>
+      <model>GS-11D</model>
+      <manufacturer>Geospace</manufacturer>
+      <type>Geophone</type>
+      <unit>M/S</unit>
+    </sensor>
+    <datalogger publicID="Datalogger#PB24_Z" name="PB-24">
+      <description>Pena Bumi PB-24 Digitizer</description>
+      <gain>1677721.4</gain>
+      <maxClockDrift>0</maxClockDrift>
+      <decimation sampleRateNumerator="100" sampleRateDenominator="1">
+        <digitalFilterChain>ResponseFIR#DECIM2</digitalFilterChain>
+      </decimation>
+    </datalogger>
+    <datalogger publicID="Datalogger#PB24_N" name="PB-24">
+      <description>Pena Bumi PB-24 Digitizer</description>
+      <gain>1677721.4</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <datalogger publicID="Datalogger#PB24_E" name="PB-24">
+      <description>Pena Bumi PB-24 Digitizer</description>
+      <gain>1677721.4</gain>
+      <maxClockDrift>0</maxClockDrift>
+    </datalogger>
+    <responsePAZ publicID="ResponsePAZ#GS11D">
+      <type>A</type>
+      <gain>32</gain>
+      <gainFrequency>15</gainFrequency>
+      <normalizationFactor>1.0</normalizationFactor>
+      <normalizationFrequency>15</normalizationFrequency>
+      <numberOfZeros>2</numberOfZeros>
+      <numberOfPoles>2</numberOfPoles>
+      <zeros>(0,0) (0,0)</zeros>
+      <poles>(-22.2111,22.2111) (-22.2111,-22.2111)</poles>
+    </responsePAZ>
+    <responseFIR publicID="ResponseFIR#DECIM2">
+      <gain>1</gain>
+      <decimationFactor>2</decimationFactor>
+      <delay>0</delay>
+      <correction>0</correction>
+      <numberOfCoefficients>5</numberOfCoefficients>
+      <symmetry>C</symmetry>
+      <coefficients>0.1 0.2 0.4 0.2 0.1</coefficients>
+    </responseFIR>
+    <network publicID="Network/XX" code="XX">
+      <start>2024-01-01T00:00:00Z</start>
+      <description>Local Test Network</description>
+      <station publicID="Station/XX/PBUMI" code="PBUMI">
+        <start>2024-06-01T00:00:00Z</start>
+        <description>Yogyakarta Seismic Shelter</description>
+        <latitude>-7.7714</latitude>
+        <longitude>110.3776</longitude>
+        <elevation>150</elevation>
+        <country>Indonesia</country>
+        <sensorLocation publicID="SensorLocation/XX/PBUMI/00" code="00">
+          <start>2024-06-01T00:00:00Z</start>
+          <latitude>-7.7714</latitude>
+          <longitude>110.3776</longitude>
+          <elevation>150</elevation>
+          <stream code="SHZ" datalogger="Datalogger#PB24_Z" sensor="Sensor#GS11D_Z">
+            <start>2024-06-01T00:00:00Z</start>
+            <dataloggerSerialNumber>PB001</dataloggerSerialNumber>
+            <sensorSerialNumber>1234</sensorSerialNumber>
+            <sampleRateNumerator>100</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <dip>-90</dip>
+            <gain>53687084.8</gain>
+            <gainFrequency>15</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+          </stream>
+          <stream code="SHN" datalogger="Datalogger#PB24_N" sensor="Sensor#GS11D_N">
+            <start>2024-06-01T00:00:00Z</start>
+            <dataloggerSerialNumber>PB001</dataloggerSerialNumber>
+            <sensorSerialNumber>1235</sensorSerialNumber>
+            <sampleRateNumerator>100</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>0</azimuth>
+            <dip>0</dip>
+            <gain>53687084.8</gain>
+            <gainFrequency>15</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+          </stream>
+          <stream code="SHE" datalogger="Datalogger#PB24_E" sensor="Sensor#GS11D_E">
+            <start>2024-06-01T00:00:00Z</start>
+            <dataloggerSerialNumber>PB001</dataloggerSerialNumber>
+            <sensorSerialNumber>1236</sensorSerialNumber>
+            <sampleRateNumerator>100</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth>
+            <azimuth>90</azimuth>
+            <dip>0</dip>
+            <gain>53687084.8</gain>
+            <gainFrequency>15</gainFrequency>
+            <gainUnit>M/S</gainUnit>
+          </stream>
+        </sensorLocation>
+      </station>
+    </network>
+  </Inventory>
+</seiscomp>
