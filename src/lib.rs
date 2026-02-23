@@ -5,10 +5,35 @@
 //!
 //! # Supported Formats
 //!
-//! | Format | Read | Write | Status |
-//! |--------|------|-------|--------|
-//! | FDSN StationXML 1.2 | Yes | Yes | v0.1 |
-//! | SeisComP SC3ML 0.6–0.13 | Yes | Yes | v0.2 |
+//! | Format | Read | Write |
+//! |--------|------|-------|
+//! | FDSN StationXML 1.2 | Yes | Yes |
+//! | SeisComP SC3ML 0.6--0.13 | Yes | Yes |
+//!
+//! # Quick Start
+//!
+//! ```no_run
+//! use stationxml_rs::{read_from_file, write_to_string, Sc3ml};
+//!
+//! // Read any format (auto-detects FDSN or SC3ML)
+//! let inv = read_from_file("station.xml").unwrap();
+//! println!("{} networks", inv.networks.len());
+//!
+//! // Write as SC3ML
+//! let xml = write_to_string::<Sc3ml>(&inv).unwrap();
+//! ```
+//!
+//! # Cross-Format Conversion
+//!
+//! ```no_run
+//! use stationxml_rs::{Fdsn, Sc3ml, StationXmlFormat, write_to_string};
+//!
+//! // Read FDSN StationXML
+//! let inv = Fdsn::read_from_str("<FDSNStationXML>...</FDSNStationXML>").unwrap();
+//!
+//! // Convert to SC3ML
+//! let sc3ml = write_to_string::<Sc3ml>(&inv).unwrap();
+//! ```
 
 pub mod builder;
 pub mod conversion;

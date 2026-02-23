@@ -1,6 +1,6 @@
 [package]
 name = "stationxml-rs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 license = "Apache-2.0"
 description = "Pure Rust FDSN StationXML and SeisComP SC3ML reader/writer with format-agnostic inventory model"
