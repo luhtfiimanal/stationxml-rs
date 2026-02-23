@@ -1,0 +1,101 @@
+[
+  {
+    "model": "GS-11D",
+    "manufacturer": "Geospace",
+    "sensor_type": "Geophone",
+    "description": "Vertical geophone",
+    "sensitivity": 32.0,
+    "sensitivity_unit": "M/S",
+    "frequency_range": [4.5, 500.0],
+    "natural_period": 0.222,
+    "damping": 0.6
+  },
+  {
+    "model": "GS-11D 3C",
+    "manufacturer": "Geospace",
+    "sensor_type": "Geophone",
+    "description": "3-component geophone",
+    "sensitivity": 32.0,
+    "sensitivity_unit": "M/S",
+    "frequency_range": [4.5, 500.0],
+    "natural_period": 0.222,
+    "damping": 0.6
+  },
+  {
+    "model": "SM-6",
+    "manufacturer": "ION/Sensor Nederland",
+    "sensor_type": "Geophone",
+    "description": "Short-period geophone",
+    "sensitivity": 28.8,
+    "sensitivity_unit": "M/S",
+    "frequency_range": [4.5, 500.0],
+    "natural_period": 0.222,
+    "damping": 0.56
+  },
+  {
+    "model": "L-4C",
+    "manufacturer": "Sercel/Mark Products",
+    "sensor_type": "Geophone",
+    "description": "Short-period seismometer",
+    "sensitivity": 171.0,
+    "sensitivity_unit": "M/S",
+    "frequency_range": [1.0, 500.0],
+    "natural_period": 1.0,
+    "damping": 0.28
+  },
+  {
+    "model": "STS-2",
+    "manufacturer": "Streckeisen",
+    "sensor_type": "Broadband",
+    "description": "Broadband seismometer",
+    "sensitivity": 1500.0,
+    "sensitivity_unit": "M/S",
+    "frequency_range": [0.00833, 50.0],
+    "natural_period": 120.0,
+    "damping": 0.707
+  },
+  {
+    "model": "CMG-3T",
+    "manufacturer": "Guralp",
+    "sensor_type": "Broadband",
+    "description": "Broadband seismometer",
+    "sensitivity": 1500.0,
+    "sensitivity_unit": "M/S",
+    "frequency_range": [0.00833, 50.0],
+    "natural_period": 120.0,
+    "damping": 0.707
+  },
+  {
+    "model": "CMG-40T",
+    "manufacturer": "Guralp",
+    "sensor_type": "Broadband",
+    "description": "Intermediate-period seismometer",
+    "sensitivity": 800.0,
+    "sensitivity_unit": "M/S",
+    "frequency_range": [0.033, 50.0],
+    "natural_period": 30.0,
+    "damping": 0.707
+  },
+  {
+    "model": "Trillium 120",
+    "manufacturer": "Nanometrics",
+    "sensor_type": "Broadband",
+    "description": "Broadband seismometer",
+    "sensitivity": 1202.5,
+    "sensitivity_unit": "M/S",
+    "frequency_range": [0.00833, 100.0],
+    "natural_period": 120.0,
+    "damping": 0.707
+  },
+  {
+    "model": "PE-6/B",
+    "manufacturer": "Beijing Seis",
+    "sensor_type": "Short Period",
+    "description": "Short-period seismometer",
+    "sensitivity": 200.0,
+    "sensitivity_unit": "M/S",
+    "frequency_range": [1.0, 100.0],
+    "natural_period": 1.0,
+    "damping": 0.6
+  }
+]
