@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2026-04-06
+
+### Fixed
+- SC3ML reader now populates `Decimation.input_sample_rate` for FIR and digital `Coefficients` stages by walking the digital filter chain forward from the pre-decimation rate. Previously, every parsed FIR stage had `input_sample_rate = 0.0`, which caused downstream consumers (e.g. `ppsd-rs`) to silently produce NaN response evaluations.
+
 ## [0.2.1] - 2025-02-23
 
 ### Added

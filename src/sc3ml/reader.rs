@@ -278,13 +278,31 @@ fn build_response(
                 }
             }
 
-            // Datalogger gain stage (V → COUNTS)
+            // Output sample rate of the stream (after the full digital filter chain).
+            let stream_sample_rate = if stream.sample_rate_denominator > 0 {
+                stream.sample_rate_numerator as f64 / stream.sample_rate_denominator as f64
+            } else {
+                0.0
+            };
+
+            // The input sample rate to the first digital (FIR) stage is the
+            // stream's output rate multiplied by the product of all FIR
+            // decimation factors in the chain. SC3ML does not store this rate
+            // directly — it must be reconstructed from the chain.
+            let mut digital_input_rate = stream_sample_rate;
+            if let Some(chain) = &decim.digital_filter_chain {
+                for ref_id in chain.split_whitespace() {
+                    if let Some(ResponseDef::Fir(fir)) = responses.get(ref_id) {
+                        let factor = fir.decimation_factor.unwrap_or(1).max(1) as f64;
+                        digital_input_rate *= factor;
+                    }
+                }
+            }
+
+            // Datalogger gain stage (V → COUNTS): runs before the digital
+            // filter chain, so its input rate is the pre-decimation rate.
             if let Some(dl_gain) = dl.gain {
-                let sample_rate = if stream.sample_rate_denominator > 0 {
-                    stream.sample_rate_numerator as f64 / stream.sample_rate_denominator as f64
-                } else {
-                    0.0
-                };
+                let sample_rate = digital_input_rate;
 
                 stages.push(ResponseStage {
                     number: stage_number,
@@ -318,13 +336,18 @@ fn build_response(
                 stage_number += 1;
             }
 
-            // Digital filter chain → FIR stages
+            // Digital filter chain → FIR stages. Walk forward, propagating
+            // the input sample rate: each FIR's output rate = input / factor,
+            // which becomes the next stage's input rate.
             if let Some(chain) = &decim.digital_filter_chain {
+                let mut current_rate = digital_input_rate;
                 for ref_id in chain.split_whitespace() {
                     if let Some(ResponseDef::Fir(fir)) = responses.get(ref_id) {
-                        let fir_stage = convert_fir_to_stage(fir, stage_number)?;
+                        let factor = fir.decimation_factor.unwrap_or(1).max(1);
+                        let fir_stage = convert_fir_to_stage(fir, stage_number, current_rate)?;
                         stages.push(fir_stage);
                         stage_number += 1;
+                        current_rate /= factor as f64;
                     }
                 }
             }
@@ -452,7 +475,11 @@ fn convert_paz_to_stage(
 
 // ─── FIR → ResponseStage ────────────────────────────────────────────
 
-fn convert_fir_to_stage(fir: &Sc3mlResponseFir, number: u32) -> Result<ResponseStage> {
+fn convert_fir_to_stage(
+    fir: &Sc3mlResponseFir,
+    number: u32,
+    input_sample_rate: f64,
+) -> Result<ResponseStage> {
     let symmetry = match fir.symmetry.as_deref().unwrap_or("A") {
         "A" => Symmetry::None,
         "B" => Symmetry::Odd,
@@ -472,7 +499,6 @@ fn convert_fir_to_stage(fir: &Sc3mlResponseFir, number: u32) -> Result<ResponseS
         .unwrap_or_default();
 
     let decimation_factor = fir.decimation_factor.unwrap_or(1);
-    let input_sample_rate = 0.0; // Not available in SC3ML FIR definition
 
     Ok(ResponseStage {
         number,
@@ -815,6 +841,72 @@ mod tests {
         assert!((fir.numerator_coefficients[0] - 0.1).abs() < 1e-6);
         let dec = s3.decimation.as_ref().unwrap();
         assert_eq!(dec.factor, 5);
+        // Regression: input_sample_rate must be reconstructed from the chain.
+        // Stream output rate = 40, single FIR with factor=5 → input = 200.
+        assert!((dec.input_sample_rate - 200.0).abs() < 1e-9);
+        // Datalogger gain stage shares the same pre-decimation input rate.
+        let s2_dec = s2.decimation.as_ref().unwrap();
+        assert!((s2_dec.input_sample_rate - 200.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn fir_chain_input_sample_rate_propagates() {
+        // Regression test: SC3ML digital filter chain must populate
+        // Decimation.input_sample_rate by walking the chain forward from the
+        // pre-decimation rate. Two FIRs in series, factors 2 and 5, with a
+        // stream output rate of 20 → first FIR input = 200, second = 100.
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp version="0.13">
+  <Inventory>
+    <sensor publicID="S#1" unit="M/S"><model>X</model></sensor>
+    <datalogger publicID="DL#1">
+      <gain>1000</gain>
+      <decimation sampleRateNumerator="20" sampleRateDenominator="1">
+        <digitalFilterChain>FIR#A FIR#B</digitalFilterChain>
+      </decimation>
+    </datalogger>
+    <responseFIR publicID="FIR#A">
+      <gain>1</gain><decimationFactor>2</decimationFactor>
+      <delay>0</delay><correction>0</correction>
+      <numberOfCoefficients>2</numberOfCoefficients>
+      <symmetry>A</symmetry>
+      <coefficients>0.5 0.5</coefficients>
+    </responseFIR>
+    <responseFIR publicID="FIR#B">
+      <gain>1</gain><decimationFactor>5</decimationFactor>
+      <delay>0</delay><correction>0</correction>
+      <numberOfCoefficients>2</numberOfCoefficients>
+      <symmetry>A</symmetry>
+      <coefficients>0.5 0.5</coefficients>
+    </responseFIR>
+    <network publicID="Net/IA" code="IA">
+      <station publicID="Sta/JAGI" code="JAGI">
+        <latitude>0</latitude><longitude>0</longitude><elevation>0</elevation>
+        <sensorLocation publicID="Loc#1" code="">
+          <stream code="BHZ" sensor="S#1" datalogger="DL#1">
+            <sampleRateNumerator>20</sampleRateNumerator>
+            <sampleRateDenominator>1</sampleRateDenominator>
+            <depth>0</depth><azimuth>0</azimuth><dip>-90</dip>
+          </stream>
+        </sensorLocation>
+      </station>
+    </network>
+  </Inventory>
+</seiscomp>"#;
+        let inv = read_from_str(xml).unwrap();
+        let resp = inv.networks[0].stations[0].channels[0]
+            .response
+            .as_ref()
+            .unwrap();
+        // Stages: [0]=DL gain, [1]=FIR A, [2]=FIR B
+        let dl_dec = resp.stages[0].decimation.as_ref().unwrap();
+        assert!((dl_dec.input_sample_rate - 200.0).abs() < 1e-9);
+        let fir_a_dec = resp.stages[1].decimation.as_ref().unwrap();
+        assert!((fir_a_dec.input_sample_rate - 200.0).abs() < 1e-9);
+        assert_eq!(fir_a_dec.factor, 2);
+        let fir_b_dec = resp.stages[2].decimation.as_ref().unwrap();
+        assert!((fir_b_dec.input_sample_rate - 100.0).abs() < 1e-9);
+        assert_eq!(fir_b_dec.factor, 5);
     }
 
     #[test]
