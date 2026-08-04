@@ -310,6 +310,9 @@ fn build_response(
                         value: dl_gain,
                         frequency: 0.0,
                     }),
+                    // Units live on the transfer function element below.
+                    input_units: None,
+                    output_units: None,
                     poles_zeros: None,
                     coefficients: Some(Coefficients {
                         input_units: Units {
@@ -359,6 +362,9 @@ fn build_response(
                     value: dl_gain,
                     frequency: 0.0,
                 }),
+                // Units live on the transfer function element below.
+                input_units: None,
+                output_units: None,
                 poles_zeros: None,
                 coefficients: Some(Coefficients {
                     input_units: Units {
@@ -452,6 +458,9 @@ fn convert_paz_to_stage(
             value: g,
             frequency: paz.gain_frequency.unwrap_or(1.0),
         }),
+        // Units live on the transfer function element below.
+        input_units: None,
+        output_units: None,
         poles_zeros: Some(PolesZeros {
             input_units: Units {
                 name: input_unit.into(),
@@ -506,6 +515,9 @@ fn convert_fir_to_stage(
             value: g,
             frequency: fir.gain_frequency.unwrap_or(0.0),
         }),
+        // Units live on the transfer function element below.
+        input_units: None,
+        output_units: None,
         poles_zeros: None,
         coefficients: None,
         fir: Some(FIR {

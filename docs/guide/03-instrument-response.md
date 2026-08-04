@@ -188,6 +188,72 @@ With additional PGA (Programmable Gain Amplifier) and digital gain:
 effective_gain = max_count * pga_gain * adc_gain / full_scale_voltage
 ```
 
+## Gain-Only Stages — Every Stage Must Declare Units
+
+Some stages are pure gain: a preamp, a programmable gain amplifier, or an A/D
+conversion factor with no filtering. It is tempting to write them as a bare
+`<StageGain>`:
+
+```xml
+<!-- WRONG: no units, the response is now unusable -->
+<Stage number="2">
+  <StageGain><Value>8.0</Value><Frequency>1.0</Frequency></StageGain>
+</Stage>
+```
+
+FDSN StationXML carries units *only* inside a transfer function element, so this
+stage declares nothing. That breaks the unit chain across the response, and
+`evalresp` refuses to evaluate the **entire channel**:
+
+```
+check_channel; units mismatch between stages   [Stage: 4]
+```
+
+`obspy`'s `remove_response()` and `get_evalresp_response()` then fail outright. The
+sensitivity may be written perfectly — the data still cannot be deconvolved.
+
+The fix is to give the stage an element whose only job is to carry the units. Use an
+empty poles & zeros: with no poles, no zeros and `A0 = 1` the transfer function is
+exactly `H(s) = 1`, so the stage contributes nothing beyond its scalar gain.
+
+```xml
+<!-- RIGHT: inert carrier, units declared -->
+<Stage number="2">
+  <PolesZeros>
+    <InputUnits><Name>V</Name></InputUnits>
+    <OutputUnits><Name>V</Name></OutputUnits>
+    <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
+    <NormalizationFactor>1.0</NormalizationFactor>
+    <NormalizationFrequency>1.0</NormalizationFrequency>
+  </PolesZeros>
+  <StageGain><Value>8.0</Value><Frequency>1.0</Frequency></StageGain>
+</Stage>
+```
+
+An empty `<Coefficients>` does *not* work as a substitute: ObsPy rejects the analog
+form ("when no denominators are given it must be a digital FIR filter"), and the
+digital form makes evalresp demand a `<Decimation>` blockette the stage does not have.
+
+In Rust, set the units on the stage and the writer emits the carrier for you:
+
+```rust
+use stationxml_rs::{ResponseStage, Units};
+
+let pga = ResponseStage::gain_only(2, 8.0, 1.0, Units::new("V"), Units::new("V"));
+let adc = ResponseStage::gain_only(3, 3_355_442.8, 1.0, Units::new("V"), Units::new("COUNTS"));
+```
+
+Use `stage.resolved_units()` to read a stage's effective units without caring whether
+they live on the element or on the stage itself.
+
+The rule to check before shipping any inventory: **the output units of stage N must
+equal the input units of stage N+1**, all the way from the sensor's physical units to
+`COUNTS`:
+
+```
+M/S -> V | V -> V | V -> COUNTS | COUNTS -> COUNTS | COUNTS -> COUNTS
+```
+
 ## "Remove Instrument Response" — What ObsPy Does
 
 When a scientist says "remove instrument response", what happens:

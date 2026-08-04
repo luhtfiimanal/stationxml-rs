@@ -134,10 +134,52 @@ fn convert_units(units: &Units) -> FdsnUnits {
     }
 }
 
+/// Empty `<PolesZeros>` used to declare the units of a gain-only stage.
+///
+/// FDSN StationXML only carries units inside a transfer function element, so a stage
+/// consisting of nothing but a `<StageGain>` has nowhere to say what it converts. That
+/// breaks the unit chain and makes `evalresp` reject the *entire* channel with
+/// "units mismatch between stages" — the response becomes unusable for deconvolution.
+///
+/// With no poles and no zeros and `A0 = 1` the transfer function is exactly
+/// `H(s) = 1`, so the stage still contributes nothing beyond its scalar gain. An empty
+/// `<Coefficients>` cannot be used instead: ObsPy rejects the analog form ("when no
+/// denominators are given it must be a digital FIR filter") and evalresp demands a
+/// decimation blockette for the digital form.
+fn unit_carrier_poles_zeros(
+    input_units: &Units,
+    output_units: &Units,
+    stage: &ResponseStage,
+) -> FdsnPolesZeros {
+    FdsnPolesZeros {
+        input_units: convert_units(input_units),
+        output_units: convert_units(output_units),
+        pz_transfer_function_type: format_pz_transfer_function(&PzTransferFunction::LaplaceRadians),
+        normalization_factor: 1.0,
+        // Quoted at the stage gain's own reference frequency; A0 = 1 makes it inert.
+        normalization_frequency: FdsnFloatValue::new(
+            stage.stage_gain.as_ref().map_or(1.0, |g| g.frequency),
+        ),
+        zeros: Vec::new(),
+        poles: Vec::new(),
+    }
+}
+
 fn convert_stage(stage: &ResponseStage) -> FdsnResponseStage {
+    let poles_zeros = match &stage.poles_zeros {
+        Some(pz) => Some(convert_poles_zeros(pz)),
+        // Gain-only stage: synthesize a unit carrier if the caller declared units.
+        None if stage.coefficients.is_none() && stage.fir.is_none() => stage
+            .input_units
+            .as_ref()
+            .zip(stage.output_units.as_ref())
+            .map(|(i, o)| unit_carrier_poles_zeros(i, o, stage)),
+        None => None,
+    };
+
     FdsnResponseStage {
         number: stage.number,
-        poles_zeros: stage.poles_zeros.as_ref().map(convert_poles_zeros),
+        poles_zeros,
         coefficients: stage.coefficients.as_ref().map(convert_coefficients),
         fir: stage.fir.as_ref().map(convert_fir),
         decimation: stage.decimation.as_ref().map(|d| FdsnDecimation {

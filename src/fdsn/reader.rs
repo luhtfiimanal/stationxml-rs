@@ -133,13 +133,25 @@ fn convert_units(units: FdsnUnits) -> Units {
     }
 }
 
+/// True for the empty `<PolesZeros>` the writer emits to carry the units of a
+/// gain-only stage: no poles, no zeros, `A0 = 1`, i.e. `H(s) = 1` exactly.
+///
+/// Such an element is not a filter — it exists only because FDSN has nowhere else to
+/// put the units — so reading it back as a poles & zeros stage would be misleading.
+/// `A0 != 1` is left alone: that really is a flat scalar filter.
+fn is_unit_carrier(pz: &PolesZeros) -> bool {
+    pz.poles.is_empty() && pz.zeros.is_empty() && pz.normalization_factor == 1.0
+}
+
 fn convert_stage(stage: FdsnResponseStage) -> Result<ResponseStage> {
-    Ok(ResponseStage {
+    let mut out = ResponseStage {
         number: stage.number,
         stage_gain: stage.stage_gain.map(|g| StageGain {
             value: g.value,
             frequency: g.frequency,
         }),
+        input_units: None,
+        output_units: None,
         poles_zeros: stage.poles_zeros.map(convert_poles_zeros).transpose()?,
         coefficients: stage.coefficients.map(convert_coefficients).transpose()?,
         fir: stage.fir.map(convert_fir).transpose()?,
@@ -150,7 +162,20 @@ fn convert_stage(stage: FdsnResponseStage) -> Result<ResponseStage> {
             delay: d.delay.value,
             correction: d.correction.value,
         }),
-    })
+    };
+
+    // Lift a unit carrier back onto the stage, restoring the gain-only stage the
+    // writer started from, so write -> read -> write is stable.
+    if out.coefficients.is_none()
+        && out.fir.is_none()
+        && out.poles_zeros.as_ref().is_some_and(is_unit_carrier)
+        && let Some(pz) = out.poles_zeros.take()
+    {
+        out.input_units = Some(pz.input_units);
+        out.output_units = Some(pz.output_units);
+    }
+
+    Ok(out)
 }
 
 fn convert_poles_zeros(pz: FdsnPolesZeros) -> Result<PolesZeros> {

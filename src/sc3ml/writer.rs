@@ -295,15 +295,16 @@ fn get_or_create_sensor(
             })
     });
 
-    // Determine unit from sensor PZ input units or from gain
+    // Determine unit from the first stage's input units (wherever they are declared)
+    // or from the overall sensitivity.
     let unit = ch
         .response
         .as_ref()
         .and_then(|r| {
             r.stages
                 .first()
-                .and_then(|s| s.poles_zeros.as_ref())
-                .map(|pz| pz.input_units.name.clone())
+                .and_then(|s| s.resolved_units())
+                .map(|(inp, _)| inp.name.clone())
         })
         .or_else(|| {
             ch.response
@@ -345,14 +346,16 @@ fn get_or_create_datalogger(
             .replace([' ', '/'], "_")
     );
 
-    // Extract datalogger gain from response stages (typically stage with Coefficients V→COUNTS)
+    // Extract datalogger gain from the response stages: the A/D stage is the one that
+    // enters the digital domain (output COUNTS, input something else). Matching on the
+    // stage's units rather than on the presence of a `Coefficients` element also
+    // catches a gain-only A/D stage, whose gain would otherwise be dropped entirely.
     let dl_gain = ch.response.as_ref().and_then(|resp| {
         resp.stages
             .iter()
             .find(|s| {
-                s.coefficients
-                    .as_ref()
-                    .is_some_and(|cf| cf.output_units.name == "COUNTS")
+                s.resolved_units()
+                    .is_some_and(|(inp, out)| out.name == "COUNTS" && inp.name != "COUNTS")
             })
             .and_then(|s| s.stage_gain.as_ref().map(|g| g.value))
     });
@@ -638,6 +641,8 @@ mod tests {
                                             value: 32.0,
                                             frequency: 15.0,
                                         }),
+                                        input_units: None,
+                                        output_units: None,
                                         poles_zeros: Some(PolesZeros {
                                             input_units: Units {
                                                 name: "M/S".into(),
@@ -686,6 +691,8 @@ mod tests {
                                             value: 1677721.4,
                                             frequency: 15.0,
                                         }),
+                                        input_units: None,
+                                        output_units: None,
                                         poles_zeros: None,
                                         coefficients: Some(Coefficients {
                                             input_units: Units {

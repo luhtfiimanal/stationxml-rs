@@ -197,18 +197,69 @@ pub struct Units {
     pub description: Option<String>,
 }
 
+impl Units {
+    /// Units with a SEED name and no description, e.g. `Units::new("COUNTS")`.
+    pub fn new(name: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            description: None,
+        }
+    }
+
+    /// Units with a SEED name and a human-readable description.
+    pub fn with_description(name: impl Into<String>, description: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            description: Some(description.into()),
+        }
+    }
+}
+
 // ─── Response stages ────────────────────────────────────────────────
 
 /// One stage in the instrument response chain.
 ///
 /// Each stage has a gain and optionally one transfer function type
 /// (poles & zeros, coefficients, or FIR).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+///
+/// # Gain-only stages and units
+///
+/// A stage that is *only* a gain (a preamp, a PGA, the A/D conversion factor) has
+/// no transfer function element, so it has nowhere to declare its units. Such a
+/// stage must set [`input_units`](Self::input_units) and
+/// [`output_units`](Self::output_units) directly — otherwise the unit chain across
+/// the response is broken and `evalresp` refuses to evaluate the channel at all,
+/// reporting *"units mismatch between stages"*, which makes the response useless
+/// for deconvolution.
+///
+/// ```
+/// use stationxml_rs::{ResponseStage, Units};
+///
+/// // A programmable gain amplifier: flat 8x voltage gain, V -> V.
+/// let pga = ResponseStage::gain_only(2, 8.0, 1.0, Units::new("V"), Units::new("V"));
+/// assert_eq!(pga.resolved_units().unwrap().0.name, "V");
+/// ```
+///
+/// On write, a gain-only stage carrying units is emitted as an empty
+/// `<PolesZeros>` element (no poles, no zeros, `A0 = 1`) whose only job is to carry
+/// `InputUnits`/`OutputUnits`. Its transfer function is exactly unity, so the stage
+/// still contributes nothing but its scalar gain.
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct ResponseStage {
     /// Stage number (1-based). Stage 1 is typically the sensor.
     pub number: u32,
     /// Gain at a reference frequency for this stage
     pub stage_gain: Option<StageGain>,
+    /// Input units of a *gain-only* stage — one with no transfer function element.
+    ///
+    /// Leave `None` when the stage has a poles & zeros / coefficients / FIR element:
+    /// those carry their own units. Use [`resolved_units`](Self::resolved_units) to
+    /// read the effective units of any stage regardless of where they are declared.
+    #[serde(default)]
+    pub input_units: Option<Units>,
+    /// Output units of a *gain-only* stage — one with no transfer function element.
+    #[serde(default)]
+    pub output_units: Option<Units>,
     /// Poles & zeros transfer function (typically stage 1 — sensor)
     pub poles_zeros: Option<PolesZeros>,
     /// Coefficient transfer function
@@ -217,6 +268,54 @@ pub struct ResponseStage {
     pub fir: Option<FIR>,
     /// Decimation parameters (sample rate reduction)
     pub decimation: Option<Decimation>,
+}
+
+impl ResponseStage {
+    /// Build a gain-only stage: a flat scalar gain with explicit units.
+    ///
+    /// Use this for preamps, programmable gain amplifiers and the A/D conversion
+    /// factor — any stage whose transfer function is unity but which still carries
+    /// the signal from one unit to another (e.g. `V` -> `COUNTS`).
+    pub fn gain_only(
+        number: u32,
+        gain: f64,
+        frequency: f64,
+        input_units: Units,
+        output_units: Units,
+    ) -> Self {
+        Self {
+            number,
+            stage_gain: Some(StageGain {
+                value: gain,
+                frequency,
+            }),
+            input_units: Some(input_units),
+            output_units: Some(output_units),
+            ..Default::default()
+        }
+    }
+
+    /// Effective `(input, output)` units of this stage, wherever they are declared.
+    ///
+    /// Reads them from the transfer function element (poles & zeros, coefficients or
+    /// FIR) when there is one, and falls back to the stage-level
+    /// [`input_units`](Self::input_units)/[`output_units`](Self::output_units) of a
+    /// gain-only stage. Returns `None` for a stage that declares no units at all.
+    pub fn resolved_units(&self) -> Option<(&Units, &Units)> {
+        if let Some(pz) = &self.poles_zeros {
+            return Some((&pz.input_units, &pz.output_units));
+        }
+        if let Some(cf) = &self.coefficients {
+            return Some((&cf.input_units, &cf.output_units));
+        }
+        if let Some(fir) = &self.fir {
+            return Some((&fir.input_units, &fir.output_units));
+        }
+        match (&self.input_units, &self.output_units) {
+            (Some(i), Some(o)) => Some((i, o)),
+            _ => None,
+        }
+    }
 }
 
 /// Gain of a single stage at a reference frequency.
